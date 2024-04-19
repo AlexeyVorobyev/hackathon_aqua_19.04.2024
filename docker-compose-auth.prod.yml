@@ -1,0 +1,125 @@
+version: "1.0"
+name: "auth-service-microservices-hackathon-aqua-19-04-2024"
+services:
+  postgres-db:
+    container_name: postgres-db-hackathon-aqua-19-04-2024
+    image: postgres:latest
+    restart: unless-stopped
+    hostname: postgres-db
+    environment:
+      POSTGRES_DB: auth-database-nest
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - ${POSTGRES_DB_EXTERNAL_PORT}:5432
+    volumes:
+      - ./data/pg:/var/lib/postgresql/data:cached
+    networks:
+      dev-network:
+        ipv4_address: ${POSTGRES_DB_ADDRESS}
+
+  postgres-admin-panel:
+    container_name: postgres-admin-panel-hackathon-aqua-19-04-2024
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    hostname: postgres-admin-panel
+    depends_on:
+      - postgres-db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${POSTGRES_ADMIN_PANEL_EMAIL:-admin@mail.com}
+      PGADMIN_DEFAULT_PASSWORD: ${POSTGRES_ADMIN_PANEL_PASSWORD:-admin}
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - ${POSTGRES_ADMIN_PANEL_AUTH_EXTERNAL_PORT}:80
+    volumes:
+      - ./pgadmin/servers.json:/pgadmin4/servers.json # preconfigured servers/connections
+      - ./pgadmin/.pgpass:/.pgpass # passwords for the connections in this file
+    networks:
+      dev-network:
+        ipv4_address: ${POSTGRES_ADMIN_PANEL_AUTH_ADDRESS}
+
+  auth-service-nest:
+    container_name: auth-service-nest-hackathon-aqua-19-04-2024
+    build:
+      context: repository/auth-service-nest
+    hostname: auth-service-nest
+    depends_on:
+      - postgres-db
+    environment:
+      ADMIN_EMAIL: ${AUTH_SERVICE_EMAIL:-admin@mail.com}
+      ADMIN_PASSWORD: ${AUTH_SERVICE_PASSWORD:-admin}
+      ADDRESS: ${APPLICATION_BASE_ADDRESS}/api
+    env_file:
+      - path: repository/auth-service-nest/env/.env.prod
+        required: true
+    ports:
+      - ${AUTH_SERVICE_NEST_EXTERNAL_PORT}:8081
+    networks:
+      dev-network:
+        ipv4_address: ${AUTH_SERVICE_NEST_ADDRESS}
+
+  auth-service-single-point-entry:
+    container_name: auth-service-single-point-entry-hackathon-aqua-19-04-2024
+    build:
+      context: repository/auth-service-single-point-entry
+      args:
+        VITE_APP_API_AUTH_SERVICE_ADDRESS: ${APPLICATION_BASE_ADDRESS}/api/graphql
+        VITE_APP_BASE_URL: 'entrypoint/'
+    hostname: auth-service-single-point-entry
+    depends_on:
+      - auth-service-nest
+    ports:
+      - ${AUTH_SERVICE_SINGLE_POINT_ENTRY_EXTERNAL_PORT}:3000
+    networks:
+      dev-network:
+        ipv4_address: ${AUTH_SERVICE_SINGLE_POINT_ENTRY_ADDRESS}
+
+  auth-service-admin-panel:
+    container_name: auth-service-admin-panel-hackathon-aqua-19-04-2024
+    build:
+      context: repository/auth-service-admin-panel
+      args:
+        VITE_APP_API_AUTH_SERVICE_ADDRESS: ${APPLICATION_BASE_ADDRESS}/api/graphql
+        VITE_APP_ENTRYPOINT_SERVICE_NGINX_ADDRESS: ${APPLICATION_BASE_ADDRESS}/entrypoint/
+    hostname: auth-service-admin-panel
+    depends_on:
+      - auth-service-single-point-entry
+      - auth-service-nest
+    ports:
+      - ${AUTH_SERVICE_ADMIN_PANEL_EXTERNAL_PORT}:3000
+    networks:
+      dev-network:
+        ipv4_address: ${AUTH_SERVICE_ADMIN_PANEL_ADDRESS}
+
+  nginx-reverse-proxy:
+    container_name: nginx-reverse-proxy-auth-hackathon-aqua-19-04-2024
+    build:
+      context: nginx
+      no_cache: true
+    hostname: nginx-reverse-proxy
+    depends_on:
+      - postgres-db-hackathon-aqua-19-04-2024
+      - postgres-admin-panel-hackathon-aqua-19-04-2024
+      - auth-service-nest-hackathon-aqua-19-04-2024
+      - auth-service-single-point-entry-hackathon-aqua-19-04-2024
+      - auth-service-admin-panel-hackathon-aqua-19-04-2024
+    environment:
+      AUTH_SERVICE_NEST_ADDRESS: ${AUTH_SERVICE_NEST_ADDRESS}
+      POSTGRES_DB_ADDRESS: ${POSTGRES_DB_ADDRESS}
+      POSTGRES_ADMIN_PANEL_ADDRESS: ${POSTGRES_ADMIN_PANEL_AUTH_ADDRESS}
+      AUTH_SERVICE_SINGLE_POINT_ENTRY_ADDRESS: ${AUTH_SERVICE_SINGLE_POINT_ENTRY_ADDRESS}
+      AUTH_SERVICE_ADMIN_PANEL_ADDRESS: ${AUTH_SERVICE_ADMIN_PANEL_ADDRESS}
+    ports:
+      - ${NGINX_REVERSE_PROXY_EXTERNAL_PORT}:80
+    networks:
+      dev-network:
+        ipv4_address: ${NGINX_REVERSE_PROXY_ADDRESS}
+
+networks:
+  dev-network:
+    driver: bridge
+    external: true
+    ipam:
+      config:
+        - subnet: ${COMPOSE_SUBNET}
+          gateway: ${COMPOSE_GATEWAY}

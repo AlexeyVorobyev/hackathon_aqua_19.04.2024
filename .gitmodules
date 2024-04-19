@@ -1,0 +1,15 @@
+[submodule "repository/auth-service-admin-panel"]
+	path = repository/auth-service-admin-panel
+	url = git@github.com:AlexeyVorobyev/auth-service-admin-panel.git
+[submodule "repository/auth-service-single-point-entry"]
+	path = repository/auth-service-single-point-entry
+	url = git@github.com:AlexeyVorobyev/auth-service-single-point-entry.git
+[submodule "repository/auth-service-nest"]
+	path = repository/auth-service-nest
+	url = git@github.com:AlexeyVorobyev/auth-service-nest.git
+[submodule "repository/search-image-nest-adapter"]
+	path = repository/search-image-nest-adapter
+	url = git@github.com:AlexeyVorobyev/search-image-nest-adapter.git
+[submodule "repository/geoapify-nest-adapter"]
+	path = repository/geoapify-nest-adapter
+	url = git@github.com:AlexeyVorobyev/geoapify-nest-adapter.git
