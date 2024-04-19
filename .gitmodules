@@ -13,3 +13,6 @@
 [submodule "repository/geoapify-nest-adapter"]
 	path = repository/geoapify-nest-adapter
 	url = git@github.com:AlexeyVorobyev/geoapify-nest-adapter.git
+[submodule "repository/frontend-hackathon-aqua-19-04-2024"]
+	path = repository/frontend-hackathon-aqua-19-04-2024
+	url = git@github.com:AlexeyVorobyev/frontend-hackathon-aqua-19-04-2024.git
