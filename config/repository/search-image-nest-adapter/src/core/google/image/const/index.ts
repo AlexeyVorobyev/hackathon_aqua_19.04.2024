@@ -1,1 +1,0 @@
-export const TBM_PARAM_VALUE = 'isch'
