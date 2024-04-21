@@ -87,6 +87,18 @@ services:
       dev-network-hackathon-aqua-19-04-2024:
         ipv4_address: ${FRONTEND_ADDRESS}
 
+  frontend-admin-hackathon-aqua-19-04-2024:
+    container_name: frontend-admin-hackathon-aqua-19-04-2024
+    hostname: frontend-admin-hackathon-aqua-19-04-2024
+    build:
+      context: repository/frontend-admin-hackathon-aqua-19-04-2024
+      no_cache: true
+    ports:
+      - ${FRONTEND_ADMIN_EXTERNAL_PORT}:3000
+    networks:
+      dev-network-hackathon-aqua-19-04-2024:
+        ipv4_address: ${FRONTEND_ADMIN_ADDRESS}
+
   backend-main-hackathon-aqua-19-04-2024:
     container_name: backend-main-hackathon-aqua-19-04-2024
     hostname: backend-main-hackathon-aqua-19-04-2024
@@ -116,6 +128,7 @@ services:
       - postgres-admin-panel-hackathon-aqua-19-04-2024
       - frontend-hackathon-aqua-19-04-2024
       - backend-main-hackathon-aqua-19-04-2024
+      - frontend-admin-hackathon-aqua-19-04-2024
     environment:
       GEOAPIFY_NEST_ADAPTER_ADDRESS: ${GEOAPIFY_NEST_ADAPTER_ADDRESS}
       SEARCH_IMAGE_NEST_ADAPTER_ADDRESS: ${SEARCH_IMAGE_NEST_ADAPTER_ADDRESS}
